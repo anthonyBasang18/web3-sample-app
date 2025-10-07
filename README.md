@@ -1,6 +1,6 @@
 # Web3 dApp Project
 
-A production-ready full-stack decentralized application demonstrating Web3 integration with ERC-20 token functionality.
+A full-stack decentralized application demonstrating Web3 integration with ERC-20 token functionality.
 
 
 ## Project Structure

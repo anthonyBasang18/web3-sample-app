@@ -1,0 +1,60 @@
+name: ardata-tech-exam
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: ardata-tech-exam-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+
+  postgres:
+    image: postgres:17
+    container_name: ardata-tech-exam-postgres
+    ports:
+      - "5434:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-web3user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-web3pass}
+      - POSTGRES_DB=${POSTGRES_DB:-web3db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: ../backend
+    image: ardata-tech-exam-backend:latest
+    container_name: ardata-tech-exam-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - ALCHEMY_API_KEY=${ALCHEMY_API_KEY}
+      - CONTRACT_ADDRESS=${CONTRACT_ADDRESS}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-web3user}:${POSTGRES_PASSWORD:-web3pass}@postgres:5432/${POSTGRES_DB:-web3db}
+    depends_on:
+      - redis
+      - postgres
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - /Volumes/reroot/projects/web3/backend:/app
+
+
+  frontend:
+    build: ../frontend
+    image: ardata-tech-exam-frontend:latest
+    container_name: ardata-tech-exam-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NUXT_PUBLIC_CONTRACT_ADDRESS=${CONTRACT_ADDRESS}
+      - NUXT_PUBLIC_API_URL=${NUXT_PUBLIC_API_URL:-http://localhost:8000}
+    command: npm run dev
+    volumes:
+      - /Volumes/reroot/projects/web3/frontend:/app
+      - /app/node_modules
+
+volumes:
+  redis_data:
+  postgres_data:
